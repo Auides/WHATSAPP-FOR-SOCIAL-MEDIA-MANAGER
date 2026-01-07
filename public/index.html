@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Status Manager</title>
+    <style>
+        :root {
+            --bg-1: #0f172a;
+            --bg-2: #0b1f3a;
+            --surface: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.14);
+            --text: #e6eef6;
+            --muted: #9fb2c8;
+            --accent: #4ade80;
+            --accent-2: #22c1c3;
+            --danger: #ff6b6b;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Space Grotesk", "Segoe UI", Arial, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(900px 500px at 20% 10%, rgba(34, 193, 195, 0.18), transparent 60%),
+                radial-gradient(700px 500px at 85% 20%, rgba(74, 222, 128, 0.2), transparent 65%),
+                linear-gradient(160deg, var(--bg-1), var(--bg-2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .shell {
+            width: min(1020px, 100%);
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 22px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        h1 {
+            margin: 0 0 6px;
+            font-size: 28px;
+            letter-spacing: 0.3px;
+        }
+
+        .sub {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .badge-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        label {
+            display: block;
+            margin: 14px 0 6px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        input, textarea, button, select {
+            width: 100%;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: rgba(10, 20, 35, 0.5);
+            color: var(--text);
+            padding: 12px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .content-grid {
+            display: grid;
+            gap: 20px;
+            grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+        }
+
+        .row {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .btn {
+            border: none;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #0b1220;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(34, 193, 195, 0.2); }
+        .btn:active { transform: translateY(0); }
+        .btn:disabled { cursor: not-allowed; opacity: 0.5; box-shadow: none; }
+
+        .ghost {
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border);
+        }
+
+        .status {
+            min-height: 48px;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            font-size: 13px;
+            color: var(--muted);
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            margin-top: 12px;
+        }
+
+        .panel {
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: rgba(12, 20, 35, 0.7);
+            padding: 16px;
+            display: grid;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .preview-box {
+            aspect-ratio: 9 / 16;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            display: grid;
+            place-items: center;
+            font-size: 16px;
+            text-align: center;
+            padding: 16px;
+            overflow: hidden;
+            word-break: break-word;
+        }
+
+        .files {
+            display: grid;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--muted);
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        .file-row {
+            display: grid;
+            gap: 8px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .file-name {
+            font-size: 12px;
+            color: var(--text);
+            word-break: break-all;
+        }
+
+        .toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .toggle input { width: auto; }
+
+        .notice {
+            font-size: 12px;
+            color: var(--danger);
+            margin-top: 6px;
+        }
+
+        .pill-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 900px) {
+            .content-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            .card { padding: 18px; }
+            .row { grid-template-columns: 1fr; }
+            .preview-box { aspect-ratio: 3 / 4; }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <div class="card">
+            <div class="header">
+                <div>
+                    <h1>Status Publisher</h1>
+                    <p class="sub">Post media or text status without sharing the main account.</p>
+                </div>
+                <div class="badge-row">
+                    <span class="pill">Max 15 files</span>
+                    <span class="pill" id="fileCount">0 / 15</span>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <form id="status-form" action="/upload" method="POST" enctype="multipart/form-data">
+                    <label>Manager Password</label>
+                    <input type="password" name="password" placeholder="Enter manager password" required>
+
+                    <label>Media Files (multiple allowed)</label>
+                    <input id="mediaFile" type="file" name="mediaFile" accept="image/*,video/*" multiple>
+                    <div class="files" id="fileItems"></div>
+                    <button class="ghost" id="clearFiles" type="button">Clear selected files</button>
+                    <div class="notice" id="fileNotice"></div>
+                    <div class="hint">Each file can have its own caption. Captions follow the order shown.</div>
+
+                    <label>Text Status</label>
+                    <textarea id="textStatus" name="textStatus" rows="4" placeholder="Write a text status..."></textarea>
+                    <div class="row">
+                        <div>
+                            <label>Background Color</label>
+                            <input id="bgColor" type="color" name="bgColor" value="#0f172a">
+                        </div>
+                        <div>
+                            <label>Text Style</label>
+                            <select id="textStyle" name="textStyle">
+                                <option value="light">Light</option>
+                                <option value="dark">Dark</option>
+                            </select>
+                        </div>
+                    </div>
+                    <label class="toggle">
+                        <input id="plainText" type="checkbox" name="plainText" value="1">
+                        Send as plain text (no background)
+                    </label>
+
+                    <div class="row">
+                        <button class="ghost" id="loadLastText" type="button">Load last text</button>
+                        <button class="btn" id="submitBtn" type="submit">Share to Status</button>
+                    </div>
+
+                    <div class="status" id="statusBox">Ready to post.</div>
+                </form>
+
+                <div class="panel">
+                    <div class="pill">Live Preview</div>
+                    <div id="textPreview" class="preview-box">Your text status preview</div>
+                    <div class="pill-row">
+                        <span class="pill" id="countPill">0 characters</span>
+                        <span class="pill" id="modePill">Image text</span>
+                    </div>
+                    <div class="hint">WhatsApp does not allow editing a posted status. You can correct it by posting again.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('status-form');
+        const mediaInput = document.getElementById('mediaFile');
+        const fileItems = document.getElementById('fileItems');
+        const fileNotice = document.getElementById('fileNotice');
+        const fileCount = document.getElementById('fileCount');
+        const clearFiles = document.getElementById('clearFiles');
+        const textStatus = document.getElementById('textStatus');
+        const bgColor = document.getElementById('bgColor');
+        const textStyle = document.getElementById('textStyle');
+        const plainText = document.getElementById('plainText');
+        const statusBox = document.getElementById('statusBox');
+        const textPreview = document.getElementById('textPreview');
+        const countPill = document.getElementById('countPill');
+        const modePill = document.getElementById('modePill');
+        const loadLastText = document.getElementById('loadLastText');
+        const submitBtn = document.getElementById('submitBtn');
+
+        const MAX_FILES = 15;
+
+        function renderFileList(files) {
+            fileItems.innerHTML = '';
+            if (!files.length) {
+                fileItems.textContent = 'No files selected.';
+                return;
+            }
+
+            files.forEach((file, index) => {
+                const row = document.createElement('div');
+                row.className = 'file-row';
+
+                const name = document.createElement('div');
+                name.className = 'file-name';
+                name.textContent = `${index + 1}. ${file.name}`;
+
+                const caption = document.createElement('input');
+                caption.type = 'text';
+                caption.name = 'captions[]';
+                caption.placeholder = 'Caption for this file';
+                caption.maxLength = 120;
+
+                row.appendChild(name);
+                row.appendChild(caption);
+                fileItems.appendChild(row);
+            });
+        }
+
+        function updateFiles() {
+            const files = Array.from(mediaInput.files || []);
+            fileCount.textContent = `${files.length} / ${MAX_FILES}`;
+
+            if (files.length > MAX_FILES) {
+                fileNotice.textContent = `Too many files selected. Max is ${MAX_FILES}. Please reselect.`;
+                submitBtn.disabled = true;
+            } else {
+                fileNotice.textContent = '';
+                submitBtn.disabled = false;
+            }
+
+            renderFileList(files);
+        }
+
+        function updatePreview() {
+            const text = textStatus.value.trim();
+            const mode = textStyle.value;
+            const isPlain = plainText.checked;
+            textPreview.textContent = text || 'Your text status preview';
+            textPreview.style.background = bgColor.value;
+            textPreview.style.color = mode === 'dark' ? '#0b1220' : '#f8fafc';
+            countPill.textContent = `${text.length} characters`;
+            modePill.textContent = isPlain ? 'Plain text' : 'Image text';
+        }
+
+        function wrapText(ctx, text, maxWidth) {
+            const words = text.split(/\s+/);
+            const lines = [];
+            let line = '';
+
+            words.forEach((word) => {
+                const testLine = line ? `${line} ${word}` : word;
+                if (ctx.measureText(testLine).width > maxWidth && line) {
+                    lines.push(line);
+                    line = word;
+                } else {
+                    line = testLine;
+                }
+            });
+
+            if (line) lines.push(line);
+            return lines;
+        }
+
+        async function buildTextImage(text, background, isDarkText) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1080;
+            canvas.height = 1920;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = background;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = isDarkText ? '#0b1220' : '#f8fafc';
+            ctx.font = 'bold 64px Space Grotesk, Segoe UI, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const lines = wrapText(ctx, text, 860);
+            const lineHeight = 80;
+            const totalHeight = lines.length * lineHeight;
+            let y = (canvas.height - totalHeight) / 2 + lineHeight / 2;
+
+            lines.forEach((line) => {
+                ctx.fillText(line, canvas.width / 2, y);
+                y += lineHeight;
+            });
+
+            return new Promise((resolve) => {
+                canvas.toBlob((blob) => resolve(blob), 'image/png');
+            });
+        }
+
+        function loadSavedText() {
+            const saved = window.localStorage.getItem('lastTextStatus');
+            if (saved) {
+                textStatus.value = saved;
+                updatePreview();
+            }
+        }
+
+        mediaInput.addEventListener('change', updateFiles);
+        textStatus.addEventListener('input', updatePreview);
+        bgColor.addEventListener('input', updatePreview);
+        textStyle.addEventListener('change', updatePreview);
+        plainText.addEventListener('change', updatePreview);
+        clearFiles.addEventListener('click', () => {
+            mediaInput.value = '';
+            updateFiles();
+        });
+        loadLastText.addEventListener('click', loadSavedText);
+
+        updateFiles();
+        updatePreview();
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            statusBox.textContent = 'Uploading...';
+
+            const files = Array.from(mediaInput.files || []);
+            const text = textStatus.value.trim();
+
+            if (files.length > MAX_FILES) {
+                statusBox.textContent = `Too many files selected. Max is ${MAX_FILES}.`;
+                return;
+            }
+
+            if (!files.length && !text) {
+                statusBox.textContent = 'Please add text or media before posting.';
+                return;
+            }
+
+            const formData = new FormData(form);
+            const usePlainText = plainText.checked;
+
+            if (text && !usePlainText) {
+                const isDarkText = textStyle.value === 'dark';
+                const blob = await buildTextImage(text, bgColor.value, isDarkText);
+                if (blob) {
+                    formData.append('mediaFile', blob, 'text-status.png');
+                    formData.delete('textStatus');
+                }
+            }
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const message = await response.text();
+                statusBox.innerHTML = message;
+
+                if (text) {
+                    window.localStorage.setItem('lastTextStatus', text);
+                }
+            } catch (error) {
+                statusBox.textContent = 'Upload failed. Check the server and try again.';
+            }
+        });
+    </script>
+</body>
+</html>

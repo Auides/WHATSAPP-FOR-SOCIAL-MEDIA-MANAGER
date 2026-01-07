@@ -1,0 +1,15 @@
+{
+  "name": "whatsapp-status-desktop-macos",
+  "version": "1.0.0",
+  "description": "Desktop app for WhatsApp Status Manager (macOS)",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --mac"
+  },
+  "devDependencies": {
+    "electron": "^29.4.6",
+    "electron-builder": "^24.13.3"
+  }
+}

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup - WhatsApp Status Manager</title>
+    <style>
+        :root {
+            --bg-1: #0f172a;
+            --bg-2: #0b1f3a;
+            --surface: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.14);
+            --text: #e6eef6;
+            --muted: #9fb2c8;
+            --accent: #4ade80;
+            --accent-2: #22c1c3;
+            --danger: #ff6b6b;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Space Grotesk", "Segoe UI", Arial, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(900px 500px at 20% 10%, rgba(34, 193, 195, 0.18), transparent 60%),
+                radial-gradient(700px 500px at 85% 20%, rgba(74, 222, 128, 0.2), transparent 65%),
+                linear-gradient(160deg, var(--bg-1), var(--bg-2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .shell {
+            width: min(880px, 100%);
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 22px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25);
+            display: grid;
+            gap: 16px;
+        }
+
+        h1 {
+            margin: 0 0 6px;
+            font-size: 28px;
+            letter-spacing: 0.3px;
+        }
+
+        .sub {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .grid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+
+        .panel {
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: rgba(12, 20, 35, 0.7);
+            padding: 16px;
+            display: grid;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .qr-box {
+            aspect-ratio: 1 / 1;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+        }
+
+        .qr-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 6px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        input, button {
+            width: 100%;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: rgba(10, 20, 35, 0.5);
+            color: var(--text);
+            padding: 12px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .btn {
+            border: none;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #0b1220;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(34, 193, 195, 0.2); }
+        .btn:active { transform: translateY(0); }
+
+        .status {
+            min-height: 48px;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            font-size: 13px;
+            color: var(--muted);
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+            padding: 10px;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .hidden { display: none; }
+
+        @media (max-width: 820px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <div class="card">
+            <div>
+                <h1>Connect WhatsApp</h1>
+                <p class="sub">Scan the QR code to link the WhatsApp account, then set a manager password.</p>
+            </div>
+
+            <div class="grid">
+                <div class="panel">
+                    <div class="qr-box" id="qrBox">
+                        <span id="qrText">Waiting for QR...</span>
+                        <img id="qrImg" alt="QR Code" class="hidden">
+                    </div>
+                    <div class="status" id="qrStatus">Waiting for WhatsApp connection.</div>
+                    <div class="hint">Use another phone to scan the QR code in WhatsApp ? Linked Devices.</div>
+                </div>
+
+                <div class="panel">
+                    <form id="setupForm">
+                        <label>Current Password (only if changing)</label>
+                        <input id="currentPassword" type="password" placeholder="Leave empty for first-time setup">
+
+                        <label>New Manager Password</label>
+                        <input id="newPassword" type="password" placeholder="At least 6 characters" required>
+
+                        <button class="btn" id="saveBtn" type="submit" disabled>Save Password</button>
+                    </form>
+                    <div class="status" id="setupStatus">Scan the QR code to enable setup.</div>
+                    <button class="btn hidden" id="goPortal" type="button">Open Manager Portal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const qrImg = document.getElementById('qrImg');
+        const qrText = document.getElementById('qrText');
+        const qrStatus = document.getElementById('qrStatus');
+        const setupForm = document.getElementById('setupForm');
+        const saveBtn = document.getElementById('saveBtn');
+        const setupStatus = document.getElementById('setupStatus');
+        const newPassword = document.getElementById('newPassword');
+        const currentPassword = document.getElementById('currentPassword');
+        const goPortal = document.getElementById('goPortal');
+
+        let isReady = false;
+
+        async function pollQr() {
+            try {
+                const response = await fetch('/api/qr');
+                const data = await response.json();
+                if (data.qrDataUrl) {
+                    qrImg.src = data.qrDataUrl;
+                    qrImg.classList.remove('hidden');
+                    qrText.classList.add('hidden');
+                    qrStatus.textContent = 'Scan the QR code to connect.';
+                }
+                if (data.ready && !isReady) {
+                    isReady = true;
+                    qrStatus.textContent = 'WhatsApp connected. Set the manager password.';
+                    setupStatus.textContent = 'Set your manager password to continue.';
+                    saveBtn.disabled = false;
+                }
+            } catch (error) {
+                qrStatus.textContent = 'Unable to load QR code. Retry in a moment.';
+            }
+        }
+
+        setupForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            setupStatus.textContent = 'Saving password...';
+
+            try {
+                const response = await fetch('/api/setup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        password: newPassword.value,
+                        currentPassword: currentPassword.value
+                    })
+                });
+
+                const data = await response.json();
+                if (!data.ok) {
+                    setupStatus.textContent = data.message || 'Setup failed.';
+                    return;
+                }
+
+                setupStatus.textContent = 'Password saved! You can now open the manager portal.';
+                goPortal.classList.remove('hidden');
+            } catch (error) {
+                setupStatus.textContent = 'Setup failed. Try again.';
+            }
+        });
+
+        goPortal.addEventListener('click', () => {
+            window.location.href = '/';
+        });
+
+        pollQr();
+        setInterval(pollQr, 2000);
+    </script>
+</body>
+</html>
